@@ -3,6 +3,7 @@ public class CSVAccountBatch implements Database.Batchable<String>, Database.Sta
     public Integer totalProcessed = 0;
     public Integer totalFailed = 0;
     public string recipientEmail = '';
+    public string errors = '';
  
     public CSVAccountBatch(String csvContent, String recipientEmail) {
         this.csvLines = csvContent.split('\n');
@@ -40,6 +41,8 @@ public class CSVAccountBatch implements Database.Batchable<String>, Database.Sta
                 upsert accountsToUpsert External_Id__c;
                 totalProcessed += accountsToUpsert.size();
             } catch (DmlException dmlEx) {
+                errors += dmlEx.getMessage() + '\n';
+                system.debug(dmlEx.getMessage());
                 totalFailed += accountsToUpsert.size();
             }
         }
@@ -57,9 +60,12 @@ public class CSVAccountBatch implements Database.Batchable<String>, Database.Sta
         String body = 'Record processing has been completed.\n\n' +
                       'Total Records Processed: ' + (totalProcessed + totalFailed) + '\n' +
                       'Successfully Upserted: ' + totalProcessed + '\n' +
-                      'Failed Records: ' + totalFailed + '\n\n' +
-                      'Thank you.';
-     
+                      'Failed Records: ' + totalFailed + '\n';
+        
+        if(errors.length() > 0){
+            body += 'Reason of Failure : ' + errors;
+        }
+    
         email.setPlainTextBody(body);
         Messaging.sendEmail(new Messaging.SingleEmailMessage[] { email });
     }
