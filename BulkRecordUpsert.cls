@@ -1,5 +1,4 @@
 public class BulkRecordUpsert {
- 
     public static void ingestJob(String csvData, String recipientEmail) {
         try {
             String apiVersion = '58.0';
@@ -76,7 +75,7 @@ public class BulkRecordUpsert {
         }
     }
     
-    @future(callout = true)
+    @future(Callout = true)
     public static void processJobsWithSummary(String inputJobId, String recipientEmail, String schJobId) {
         String jobEndpoint = 'callout:Bulk2/services/data/v58.0/jobs/ingest/' + inputJobId;
         Http http = new Http();
@@ -122,21 +121,21 @@ public class BulkRecordUpsert {
         }
         
         if (!failedJobDetails.isEmpty() || !successfulJobDetails.isEmpty()) {
-            sendJobSummaryNotification(successfulJobDetails, failedJobDetails, recipientEmail);
-            System.abortJob(schJobId);
+            sendJobSummaryNotification(successfulJobDetails, failedJobDetails, recipientEmail, inputJobId);
         }
     }
  	
     private static void sendJobSummaryNotification(
         List<String> successDetails,
         List<String> failureDetails,
-        String recipientEmail
+        String recipientEmail,
+        String inputJobId
     ) {
         if (recipientEmail == null) return;
      
         Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
         email.setToAddresses(new String[] { recipientEmail });
-        email.setSubject('Bulk Data Load Summary');
+        email.setSubject('Bulk Data Load Summary | Job ID : ' + inputJobId);
      
         String body = 'BULK DATA LOAD SUMMARY\n\n';
      
